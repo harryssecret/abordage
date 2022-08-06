@@ -34,3 +34,21 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE TABLE caches {
+    id SERIAL PRIMARY KEY,
+    cache_name varchar,
+    coordinate_x point,
+    coordinate_y point,
+    difficulty int,
+    archived boolean
+};
+
+CREATE TABLE pirates {
+    id SERIAL PRIMARY KEY,
+    username varchar,
+    pass varchar,
+    display_name varchar,
+    points int
+};
