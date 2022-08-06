@@ -4,10 +4,7 @@ use rocket::serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
-struct Coordinate {
-    longitude: (i32, f32),
-    latitude: (i32, f32),
-}
+struct Coordinate(f32, f32);
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
