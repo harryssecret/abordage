@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 dotenv = "0.15.0"
-diesel = { version = "1.4.4", features = ["postgres"] }
+sqlx = {version = "0.6", features = ["runtime-async-std-native-tls", "postgres"]}
 
 [dependencies.rocket]
 version = "0.5.0-rc.2"

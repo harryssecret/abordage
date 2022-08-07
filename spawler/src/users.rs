@@ -1,7 +1,6 @@
-use diesel::Queryable;
 use rocket::serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Queryable)]
+#[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Pirate {
     username: String,

@@ -1,8 +1,9 @@
 #[macro_use]
 extern crate rocket;
+
 pub mod database;
-pub mod geocache;
-pub mod users;
+mod geocache;
+mod users;
 
 #[launch]
 fn rocket() -> _ {
