@@ -1,26 +1,34 @@
 use crate::users::Pirate;
 use rocket::serde::json::Json;
 use rocket::serde::{Deserialize, Serialize};
+use sqlx::{Pool, Postgres};
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
-struct Coordinate(f32, f32);
+
+struct Point(f32, f32);
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 struct Cache {
     name: String,
-    coordinates: (Coordinate, Coordinate),
+    coordinates: (Point, Point),
     difficulty: i8,
     pirate: Pirate,
     archived: bool,
 }
 
+enum CacheStatus {
+    Archived,
+    Maintenance,
+    Active,
+}
+
 impl Cache {
     fn new(
         name: String,
-        coordinate_x: Coordinate,
-        coordinate_y: Coordinate,
+        coordinate_x: Point,
+        coordinate_y: Point,
         difficulty: i8,
         pirate: Pirate,
         archived: bool,
@@ -36,6 +44,8 @@ impl Cache {
             archived,
         })
     }
+
+    fn to_db(self, connection: Pool<Postgres>) {}
 }
 
 #[get("/")]
@@ -55,11 +65,9 @@ fn edit_cache(id: i32) {}
 #[delete("/delete/<id>")]
 fn delete_cache(id: i32) {}
 
-pub fn register() -> rocket::fairing::AdHoc {
-    rocket::fairing::AdHoc::on_ignite("JSON", |rocket| async {
-        rocket.mount(
-            "/cache",
-            routes![insert_cache, retrieve_cache, edit_cache, delete_cache],
-        )
-    })
+pub fn register() {
+    rocket::build().mount(
+        "/cache",
+        routes![insert_cache, retrieve_cache, edit_cache, delete_cache],
+    );
 }
