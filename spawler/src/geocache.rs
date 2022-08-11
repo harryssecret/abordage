@@ -2,26 +2,46 @@ use crate::users::Pirate;
 use rocket::serde::json::Json;
 use rocket::serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
+use std::fmt;
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 
 struct Point(f32, f32);
 
+impl fmt::Display for Point {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {})", self.0, self.1)
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 struct Cache {
     name: String,
-    coordinates: (Point, Point),
+    coordinate_x: Point,
+    coordinate_y: Point,
     difficulty: i8,
     pirate: Pirate,
-    archived: bool,
+    archived: CacheStatus,
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "rocket::serde")]
 enum CacheStatus {
     Archived,
     Maintenance,
     Active,
+}
+
+impl fmt::Display for CacheStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Archived => write!(f, "archived"),
+            Self::Maintenance => write!(f, "maintenance"),
+            Self::Active => write!(f, "active"),
+        }
+    }
 }
 
 impl Cache {
@@ -31,25 +51,46 @@ impl Cache {
         coordinate_y: Point,
         difficulty: i8,
         pirate: Pirate,
-        archived: bool,
+        archived: CacheStatus,
     ) -> Result<Cache, &'static str> {
         if difficulty < 0 || difficulty > 5 {
             return Err("Invalid difficulty");
         }
         Ok(Cache {
             name,
-            coordinates: (coordinate_x, coordinate_y),
+            coordinate_x,
+            coordinate_y,
             difficulty,
             pirate,
             archived,
         })
     }
 
-    fn to_db(self, connection: Pool<Postgres>) {}
+    async fn to_db(self, pool: &Pool<Postgres>) {
+        let request = format!("INSERT INTO caches VALUES ('{}')", self);
+        let new_cache = sqlx::query(&request).execute(pool).await;
+    }
+}
+
+impl fmt::Display for Cache {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}, {}, {}, {}, {}, {}",
+            self.name,
+            self.coordinate_x,
+            self.coordinate_y,
+            self.difficulty,
+            self.pirate.username,
+            self.archived
+        )
+    }
 }
 
 #[get("/")]
-async fn retrieve_cache_list() {}
+async fn retrieve_cache_list() {
+    unimplemented!()
+}
 
 #[post("/new", data = "<new_cache>")]
 fn insert_cache(new_cache: Json<Cache>) {
@@ -57,13 +98,19 @@ fn insert_cache(new_cache: Json<Cache>) {
 }
 
 #[get("/<id>")]
-fn retrieve_cache(id: i32) {}
+fn retrieve_cache(id: i32) {
+    unimplemented!()
+}
 
 #[put("/edit/<id>")]
-fn edit_cache(id: i32) {}
+fn edit_cache(id: i32) {
+    unimplemented!()
+}
 
 #[delete("/delete/<id>")]
-fn delete_cache(id: i32) {}
+fn delete_cache(id: i32) {
+    unimplemented!()
+}
 
 pub fn register() {
     rocket::build().mount(
