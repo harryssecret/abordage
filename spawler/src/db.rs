@@ -1,5 +1,5 @@
 use dotenvy::dotenv;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::{database, postgres::PgPoolOptions, Pool, Postgres};
 use std::env;
 
 pub async fn etablish_connection() -> Result<Pool<Postgres>, sqlx::Error> {
