@@ -1,5 +1,5 @@
 [package]
-name = "spawler"
+name = "abordage"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,3 +12,6 @@ sqlx = {version = "0.6", features = ["runtime-async-std-native-tls", "postgres"]
 [dependencies.rocket]
 version = "0.5.0-rc.2"
 features = ["json"]
+
+[dependencies.rocket_db_pools]
+features = ["sqlx_postgres"]
