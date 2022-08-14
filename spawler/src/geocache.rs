@@ -1,7 +1,10 @@
 use crate::users::Pirate;
+use crate::PGDb;
+use rocket::fairing::AdHoc;
 use rocket::serde::json::Json;
 use rocket::serde::{Deserialize, Serialize};
-use sqlx::{Pool, Postgres};
+use rocket::{fairing, Build, Rocket};
+use rocket_db_pools::{sqlx, Connection, Database};
 use std::fmt;
 
 #[derive(Serialize, Deserialize)]
@@ -19,10 +22,10 @@ impl fmt::Display for Point {
 #[serde(crate = "rocket::serde")]
 struct Cache {
     name: String,
+    pirate: Pirate,
     coordinate_x: Point,
     coordinate_y: Point,
     difficulty: i8,
-    pirate: Pirate,
     archived: CacheStatus,
 }
 
@@ -66,9 +69,9 @@ impl Cache {
         })
     }
 
-    async fn to_db(self, pool: &Pool<Postgres>) {
-        let request = format!("INSERT INTO caches VALUES ('{}')", self);
-        let new_cache = sqlx::query(&request).execute(pool).await;
+    async fn to_db(&self, mut pool: Connection<PGDb>) {
+        let request = format!("INSERT INTO caches VALUES ({})", self);
+        let new_cache = sqlx::query(&request).fetch_one(&mut *pool).await;
     }
 }
 
@@ -93,8 +96,8 @@ async fn retrieve_cache_list() {
 }
 
 #[post("/new", data = "<new_cache>")]
-fn insert_cache(new_cache: Json<Cache>) {
-    unimplemented!()
+async fn insert_cache(pool: Connection<PGDb>, new_cache: Json<Cache>) {
+    new_cache.to_db(pool).await;
 }
 
 #[get("/<id>")]
@@ -112,9 +115,23 @@ fn delete_cache(id: i32) {
     unimplemented!()
 }
 
-pub fn register() {
-    rocket::build().mount(
-        "/cache",
-        routes![insert_cache, retrieve_cache, edit_cache, delete_cache],
-    );
+pub fn register() -> AdHoc {
+    AdHoc::on_ignite("Cache ignite", |rocket| async {
+        rocket.attach(PGDb::init()).mount(
+            "/cache",
+            routes![insert_cache, retrieve_cache, edit_cache, delete_cache],
+        )
+    })
+}
+async fn run_migrations(rocket: Rocket<Build>) -> fairing::Result {
+    match PGDb::fetch(&rocket) {
+        Some(db) => match sqlx::migrate!("./migrations").run(&**db).await {
+            Ok(_) => Ok(rocket),
+            Err(e) => {
+                error!("Impossible to initialize the database : {}", e);
+                Err(rocket)
+            }
+        },
+        None => Err(rocket),
+    }
 }

@@ -1,12 +1,16 @@
+use rocket_db_pools::{sqlx, Database};
+
 #[macro_use]
 extern crate rocket;
 
-pub mod database;
 mod geocache;
 mod users;
 
+#[derive(Database)]
+#[database("abordage")]
+struct PGDb(sqlx::PgPool);
+
 #[launch]
-fn rocket() -> _ {
-    geocache::register();
-    rocket::build().mount("/", routes![])
+async fn rocket() -> _ {
+    rocket::build().attach(geocache::register())
 }
