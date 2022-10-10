@@ -1,8 +1,6 @@
 # abordage - the geocaching webapp
 
-abordage is the crate managing things such as caches, user infos etc... It's currently in early alpha and it's not even working yet! (another project that i might finish this time).
-
-This webapp was made with the following crates : [Rocket](https://rocket.rs), [sqlx](https://github.com/launchbadge/sqlx), and [Dotenvy](https://github.com/nystudio107/dotenvy).
+abordage is the crate managing things such as caches, user infos etc... It's currently not even in alpha or working yet! (another project that i might finish this time).
 
 ## Build the sources
 
@@ -17,9 +15,11 @@ cargo build --release
 
 This project is licensed under the GPLv3 licence
 
+Also, credits to crates who made possible this webapp : [Rocket](https://rocket.rs), [sqlx](https://github.com/launchbadge/sqlx), and [Dotenvy](https://github.com/nystudio107/dotenvy).
+
 ## TODO
 
-- [ ] Finish implementations of the Cache and users routes
+- [ ] Correct implementations of the Cache and users routes
 - [ ] Integrate a webui
 - [ ] Create a docker-compose to make installation easier
 - [ ] Integrate a fediverse-like system.
