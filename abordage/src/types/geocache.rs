@@ -36,6 +36,12 @@ struct NewCache {
     difficulty: i16,
 }
 
+impl Saveable for NewCache {}
+
+trait Saveable {
+    fn save_to_db() {}
+}
+
 type Result<T, E = rocket::response::Debug<sqlx::Error>> = std::result::Result<T, E>;
 
 #[get("/")]
