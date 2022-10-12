@@ -1,108 +1,81 @@
 use crate::PGDb;
+use geo::Geometry;
+use geo_types::Point;
+use geozero::wkb;
 use rocket::fairing::AdHoc;
-use rocket::futures::TryStreamExt;
+use rocket::response::status::Created;
 use rocket::serde::{json::Json, Deserialize, Serialize};
-use rocket_db_pools::sqlx;
-use rocket_db_pools::Connection;
-use std::fmt;
-
-#[derive(Serialize, Deserialize, Debug, sqlx::Type)]
-#[sqlx(type_name = "point")]
-
-struct Point {
-    x: f32,
-    y: f32,
-}
-
-impl fmt::Display for Point {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {})", self.x, self.y)
-    }
-}
-
-#[derive(Serialize)]
-struct Cache {
-    id: i32,
-    cache_name: String,
-    maintainer_name: String,
-    coordinate_x: Point,
-    coordinate_y: Point,
-    difficulty: i16,
-    archived_state: CacheStatus,
-}
-
-#[derive(Deserialize)]
-struct NewCache {
-    cache_name: String,
-    maintainer: String,
-    coordinate_x: Point,
-    coordinate_y: Point,
-    difficulty: i16,
-    archived_state: CacheStatus,
-}
+use rocket_db_pools::{sqlx, Connection};
 
 #[derive(Serialize, Deserialize, sqlx::Type, Debug)]
-#[sqlx(type_name = "cache_status", rename_all = "snake_case")]
 enum CacheStatus {
     Archived,
     Maintenance,
     Active,
 }
 
-impl fmt::Display for CacheStatus {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Archived => write!(f, "archived"),
-            Self::Maintenance => write!(f, "maintenance"),
-            Self::Active => write!(f, "active"),
-        }
-    }
+struct CacheRecord {
+    location: wkb::Decode<Geometry<f64>>,
 }
 
-impl fmt::Display for NewCache {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}, {}, {}, {}, {}, {}",
-            self.cache_name,
-            self.coordinate_x,
-            self.coordinate_y,
-            self.difficulty,
-            self.maintainer,
-            self.archived_state
-        )
-    }
+#[derive(Serialize)]
+struct Cache {
+    id: i32,
+    cache_name: String,
+    maintainer: String,
+    location: Point,
+    difficulty: i16,
+    archived_state: CacheStatus,
 }
+
+#[derive(Serialize, Deserialize)]
+struct NewCache {
+    cache_name: String,
+    maintainer: String,
+    location: Point,
+    difficulty: i16,
+}
+
+type Result<T, E = rocket::response::Debug<sqlx::Error>> = std::result::Result<T, E>;
 
 #[get("/")]
-async fn retrieve_cache_list(mut pool: Connection<PGDb>) {
-    let caches_list = sqlx::query!(r#"SELECT id, cache_name, maintainer, coordinate_x as "coordinate_x: Point", coordinate_y as "coordinate_y: Point", difficulty, archived_state as "archived_state: CacheStatus" from caches"#)
-    .fetch(&mut *pool).map_ok(|r| Json(Cache { id: r.id, cache_name: r.cache_name, maintainer_name: r.maintainer, coordinate_x: r.coordinate_x, coordinate_y: r.coordinate_y, difficulty: r.difficulty, archived_state: r.archived_state })).try_collect::<Vec<_>>().await;
+async fn retrieve_cache_list(mut pool: Connection<PGDb>) -> Result<Json<Vec<Cache>>> {
+    let caches_list = sqlx::query_as!(Cache, r#"SELECT id, cache_name, maintainer, cache_location as "location!: _", difficulty, archived_state as "archived_state: CacheStatus" from caches"#)
+    .fetch(&mut *pool)
+    .map_ok(|r| Cache { id: r.id, cache_name: r.cache_name, maintainer: r.maintainer, location: r.location, difficulty: r.difficulty, archived_state: r.archived_state })
+    .try_collect::<Vec<_>>()
+    .await?;
+
+    Ok(Json(caches_list))
 }
 
 #[post("/new", data = "<new_cache>")]
-async fn insert_cache(mut pool: Connection<PGDb>, new_cache: Json<NewCache>) {
-    let request = format!("INSERT INTO caches VALUES ({})", *new_cache);
-    let new_cache = sqlx::query(&request).fetch_one(&mut *pool).await;
+async fn insert_cache(
+    mut pool: Connection<PGDb>,
+    new_cache: Json<NewCache>,
+) -> Result<Created<Json<NewCache>>> {
+    sqlx::query_as!(NewCache,
+        r#"INSERT INTO caches (cache_name, maintainer, cache_location, difficulty) VALUES ($1, $2, $3::geometry, $4);"#,
+        new_cache.cache_name, new_cache.maintainer, new_cache.location as _, new_cache.difficulty).execute(&mut *pool).await?;
+    Ok(Created::new("/").body(new_cache))
 }
 
 #[get("/<id>")]
-async fn retrieve_cache(mut pool: Connection<PGDb>, id: i32) {
-    sqlx::query!(
-        r#"SELECT cache_name, coordinate_x as "coordinate_x: Point", coordinate_y as "coordinate_y: Point", difficulty, archived_state as "archived_state: CacheStatus" FROM caches where id = $1 "#,
-        id
-    ).fetch_one(&mut *pool).await;
-    unimplemented!()
+async fn retrieve_cache(mut pool: Connection<PGDb>, id: i32) -> Result<Json<Cache>> {
+    let cache = sqlx::query_as!(Cache, r#"SELECT id, cache_name, maintainer, cache_location as "location! : _", difficulty, archived_state as "archived_state: _" from caches where id = $1"#, id)
+        .fetch_one(&mut *pool)
+        .await?;
+    Ok(Json(cache))
 }
 
 #[put("/edit/<id>")]
 async fn edit_cache(id: i32) {
-    unimplemented!()
+    todo!()
 }
 
 #[delete("/delete/<id>")]
 async fn delete_cache(id: i32) {
-    unimplemented!()
+    todo!()
 }
 
 pub fn register() -> AdHoc {
