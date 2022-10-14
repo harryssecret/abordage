@@ -1,6 +1,4 @@
 use crate::PGDb;
-use geo::Geometry;
-use geo_types::Point;
 use geozero::wkb;
 use rocket::fairing::AdHoc;
 use rocket::response::status::Created;
@@ -15,15 +13,15 @@ enum CacheStatus {
 }
 
 struct CacheRecord {
-    location: wkb::Decode<Geometry<f64>>,
+    location: wkb::Decode<geo_types::Geometry<f64>>,
 }
 
 #[derive(Serialize)]
 struct Cache {
     id: i32,
     cache_name: String,
-    maintainer: String,
     location: Point,
+    maintainer: String,
     difficulty: i16,
     archived_state: CacheStatus,
 }
@@ -62,7 +60,7 @@ async fn insert_cache(
 ) -> Result<Created<Json<NewCache>>> {
     sqlx::query_as!(NewCache,
         r#"INSERT INTO caches (cache_name, maintainer, cache_location, difficulty) VALUES ($1, $2, $3::geometry, $4);"#,
-        new_cache.cache_name, new_cache.maintainer, new_cache.location as _, new_cache.difficulty).execute(&mut *pool).await?;
+        new_cache.cache_name, new_cache.maintainer, wkb::Encode(new_cache.location) as _, new_cache.difficulty).execute(&mut *pool).await?;
     Ok(Created::new("/").body(new_cache))
 }
 
