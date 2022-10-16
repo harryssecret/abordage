@@ -15,7 +15,7 @@ cargo build --release
 
 This project is licensed under the GPLv3 licence
 
-Also, credits to crates who made possible this webapp : [Rocket](https://rocket.rs), [sqlx](https://github.com/launchbadge/sqlx), and [Dotenvy](https://github.com/nystudio107/dotenvy).
+Also, credits to crates who made possible this webapp : [axum](https://crates.io/crates/axum), [sqlx](https://github.com/launchbadge/sqlx), and [Dotenvy](https://github.com/nystudio107/dotenvy).
 
 ## TODO
 

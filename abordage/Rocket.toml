@@ -1,2 +1,0 @@
-[default.databases.abordage]
-url = "postgres://postgres:abordage@localhost/abordage"
