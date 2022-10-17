@@ -1,6 +1,7 @@
 use axum::{routing::get, Extension, Router};
 use sqlx::{postgres::PgPoolOptions, PgPool};
-use std::env;
+use std::{env, sync::Arc};
+use tower::ServiceBuilder;
 
 pub mod caches;
 pub mod users;
@@ -18,8 +19,11 @@ async fn main() {
         .await
         .expect("Impossible to connect to the database.");
 
+    let shared_state = Arc::new(AppContext { db });
+
     let app = Router::new()
         .route("/", get(|| async { "abordage is running:)" }))
+        .layer(ServiceBuilder::new().layer(Extension(shared_state)))
         .merge(caches::router());
 
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
