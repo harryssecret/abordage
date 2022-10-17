@@ -1,10 +1,14 @@
+use std::sync::Arc;
+
 use axum::{
     routing::{get, post},
-    Json, Router,
+    Extension, Json, Router,
 };
 use geo::Point;
 use geozero::wkb;
 use serde::{Deserialize, Serialize};
+
+use crate::AppContext;
 
 pub fn router() -> Router {
     Router::new()
@@ -13,7 +17,7 @@ pub fn router() -> Router {
         .route("/edit", post(edit_cache).delete(delete_cache))
 }
 
-async fn post_new_cache(Json(cache): Json<NewCache>) {}
+async fn post_new_cache(Json(cache): Json<NewCache>, Extension(ctx): Extension<Arc<AppContext>>) {}
 
 async fn get_latest_caches() {}
 
