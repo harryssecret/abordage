@@ -1,37 +1,49 @@
 use axum::{routing::get, Extension, Router};
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{postgres::PgPoolOptions, PgPool, Pool, Postgres};
 use std::{env, sync::Arc};
 use tower::ServiceBuilder;
 
 pub mod caches;
+mod tests;
 pub mod users;
 
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().ok();
+    let db = db().await;
 
-    let db_url =
-        env::var("DATABASE_URL").expect("Impossible to get DATBASE_URL environment variable");
-
-    let db = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&db_url)
+    sqlx::migrate!("./migrations")
+        .run(&db)
         .await
-        .expect("Impossible to connect to the database.");
+        .expect("Migrations failed to run.");
 
     let shared_state = Arc::new(AppContext { db });
 
-    let app = Router::new()
-        .route("/", get(|| async { "abordage is running:)" }))
-        .layer(ServiceBuilder::new().layer(Extension(shared_state)))
-        .merge(caches::router());
-
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
-        .serve(app.into_make_service())
+        .serve(app(shared_state).into_make_service())
         .await
         .unwrap();
 }
 
-struct AppContext {
+pub async fn db() -> Pool<Postgres> {
+    dotenvy::dotenv().ok();
+
+    let db_url =
+        env::var("DATABASE_URL").expect("Impossible to get DATABASE_URL environment variable");
+
+    PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&db_url)
+        .await
+        .expect("Impossible to connect to the database.")
+}
+
+pub fn app(shared_state: Arc<AppContext>) -> Router {
+    Router::new()
+        .route("/", get(|| async { "abordage is running:)" }))
+        .layer(ServiceBuilder::new().layer(Extension(shared_state)))
+        .merge(caches::router())
+}
+
+pub struct AppContext {
     db: PgPool,
 }
