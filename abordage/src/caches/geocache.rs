@@ -17,7 +17,13 @@ pub fn router() -> Router {
         .route("/edit", post(edit_cache).delete(delete_cache))
 }
 
-async fn post_new_cache(Json(cache): Json<NewCache>, Extension(ctx): Extension<Arc<AppContext>>) {}
+async fn post_new_cache(Json(cache): Json<NewCache>, Extension(ctx): Extension<Arc<AppContext>>) {
+    let location: geo_types::Geometry<f64> = cache.location.into();
+    sqlx::query!(r#"INSERT INTO caches (cache_name, maintainer, cache_location, difficulty) VALUES ($1, $2, $3::geometry, $4)"#, cache.cache_name, cache.maintainer, wkb::Encode(location) as _, cache.difficulty)
+        .execute(&ctx.db)
+        .await
+        .expect("Impossible to insert new cache.");
+}
 
 async fn get_latest_caches() {}
 
@@ -75,9 +81,3 @@ struct NewCache {
     location: Point,
     difficulty: i16,
 }
-
-trait Saveable {
-    fn save_to_db() {}
-}
-
-impl<'a> Saveable for NewCache {}
