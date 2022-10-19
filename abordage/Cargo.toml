@@ -21,7 +21,7 @@ hyper = { version = "0.14.20", features = ["full"] }
 
 [dependencies.axum]
 version = "0.5.16"
-features = ["json"]
+features = ["json", "form"]
 
 [dependencies.sqlx]
 version = "0.6.2"
