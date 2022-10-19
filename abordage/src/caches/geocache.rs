@@ -25,17 +25,31 @@ async fn post_new_cache(Json(cache): Json<NewCache>, Extension(ctx): Extension<A
         .expect("Impossible to insert new cache.");
 }
 
-async fn get_latest_caches() {}
+async fn get_latest_caches(Extension(ctx): Extension<Arc<AppContext>>) {
+    sqlx::query_as!(
+        ShortCacheRecord,
+        r#"SELECT id, cache_name, cache_location as "location!: _" FROM caches"#
+    )
+    .fetch_all(&ctx.db)
+    .await
+    .expect("Impossible to get latest caches.");
+}
 
-async fn edit_cache() {}
+async fn edit_cache(Extension(ctx): Extension<Arc<AppContext>>) {}
 
-async fn delete_cache() {}
+async fn delete_cache(Extension(ctx): Extension<Arc<AppContext>>) {}
 
 #[derive(Serialize, Deserialize, sqlx::Type, Debug)]
 pub enum CacheStatus {
     Archived,
     Maintenance,
     Active,
+}
+
+struct ShortCacheRecord {
+    id: i32,
+    cache_name: String,
+    location: wkb::Decode<geo_types::Geometry<f64>>,
 }
 
 struct CacheRecord {
