@@ -10,6 +10,7 @@ dependencies = [
  "dotenvy",
  "geo",
  "geo-types",
+ "geojson",
  "geos",
  "geozero",
  "hyper",
