@@ -14,14 +14,17 @@ use crate::AppContext;
 pub fn router() -> Router {
     Router::new()
         .route("/", get(get_latest_caches))
-        .route("/:cache_id", get(get_cache))
+        .route("/:cache_id", get(get_geocache))
         .route("/new", post(post_new_cache))
-        .route("/edit/:cache_id", post(edit_cache).delete(delete_cache))
+        .route("/edit/:cache_id", post(edit_cache).delete(delete_geocache))
 }
 
-async fn post_new_cache(Json(cache): Json<NewCache>, Extension(ctx): Extension<Arc<AppContext>>) {
-    let location: geo_types::Geometry<f64> = cache.location.into();
-    sqlx::query!(r#"INSERT INTO caches (cache_name, maintainer, cache_location, difficulty) VALUES ($1, $2, $3::geometry, $4)"#, cache.cache_name, cache.maintainer, wkb::Encode(location) as _, cache.difficulty)
+async fn post_new_cache(
+    Json(geocache): Json<NewGeocache>,
+    Extension(ctx): Extension<Arc<AppContext>>,
+) {
+    let location: geo_types::Geometry<f64> = geocache.location.into();
+    sqlx::query!(r#"INSERT INTO caches (cache_name, maintainer, cache_location, difficulty) VALUES ($1, $2, $3::geometry, $4)"#, geocache.cache_name, geocache.maintainer, wkb::Encode(location) as _, geocache.difficulty)
         .execute(&ctx.db)
         .await
         .expect("Impossible to insert new cache.");
@@ -29,7 +32,7 @@ async fn post_new_cache(Json(cache): Json<NewCache>, Extension(ctx): Extension<A
 
 async fn get_latest_caches(Extension(ctx): Extension<Arc<AppContext>>) {
     sqlx::query_as!(
-        ShortCacheRecord,
+        ShortGeocacheRecord,
         r#"SELECT id, cache_name, cache_location as "location!: _" FROM caches"#
     )
     .fetch_all(&ctx.db)
@@ -38,28 +41,29 @@ async fn get_latest_caches(Extension(ctx): Extension<Arc<AppContext>>) {
 }
 
 async fn edit_cache(
-    Json(cache_infos): Json<CacheEditInfos>,
-    Path(cache_id): Path<i32>,
+    Json(geocache_infos): Json<GeocacheEditInfos>,
+    Path(geocache_id): Path<i32>,
     Extension(ctx): Extension<Arc<AppContext>>,
 ) {
     sqlx::query!(
         r#"UPDATE caches SET cache_name = $1, difficulty = $2 WHERE id = $3"#,
-        cache_infos.cache_name,
-        cache_infos.difficulty,
-        cache_id
+        geocache_infos.cache_name,
+        geocache_infos.difficulty,
+        geocache_id
     )
     .execute(&ctx.db)
     .await
     .expect("Impossible to edit cache.");
 }
 
-async fn delete_cache(Path(cache_id): Path<i32>, Extension(ctx): Extension<Arc<AppContext>>) {}
+async fn delete_geocache(Path(geocache_id): Path<i32>, Extension(ctx): Extension<Arc<AppContext>>) {
+}
 
-async fn get_cache(Path(cache_id): Path<i32>, Extension(ctx): Extension<Arc<AppContext>>) {
+async fn get_geocache(Path(geocache_id): Path<i32>, Extension(ctx): Extension<Arc<AppContext>>) {
     sqlx::query_as!(
-        ShortCacheRecord,
+        ShortGeocacheRecord,
         r#"SELECT id, cache_name, cache_location as "location!: _" FROM caches WHERE id = $1"#,
-        cache_id
+        geocache_id
     )
     .fetch_one(&ctx.db)
     .await
@@ -67,45 +71,45 @@ async fn get_cache(Path(cache_id): Path<i32>, Extension(ctx): Extension<Arc<AppC
 }
 
 #[derive(Serialize, Deserialize, sqlx::Type, Debug)]
-pub enum CacheStatus {
+pub enum GeocacheStatus {
     Archived,
     Maintenance,
     Active,
 }
 
-struct ShortCacheRecord {
+struct ShortGeocacheRecord {
     id: i32,
     cache_name: String,
     location: wkb::Decode<geo_types::Geometry<f64>>,
 }
 
-struct CacheRecord {
+struct GeocacheRecord {
     id: i32,
     cache_name: String,
     maintainer: String,
     difficulty: i16,
-    archived_state: CacheStatus,
+    archived_state: GeocacheStatus,
     location: wkb::Decode<geo_types::Geometry<f64>>,
 }
 
 #[derive(Serialize)]
-pub struct Cache {
+pub struct Geocache {
     cache_name: String,
     location: Point,
     maintainer: String,
     difficulty: i8,
-    archived_state: CacheStatus,
+    archived_state: GeocacheStatus,
 }
 
-impl Cache {
+impl Geocache {
     pub fn new(
         cache_name: String,
         location: Point,
         maintainer: String,
         difficulty: i8,
-        archived_state: CacheStatus,
-    ) -> Cache {
-        Cache {
+        archived_state: GeocacheStatus,
+    ) -> Geocache {
+        Geocache {
             cache_name,
             location,
             maintainer,
@@ -116,7 +120,7 @@ impl Cache {
 }
 
 #[derive(Serialize, Deserialize)]
-struct NewCache {
+struct NewGeocache {
     cache_name: String,
     maintainer: String,
     location: geo_types::Point,
@@ -124,7 +128,7 @@ struct NewCache {
 }
 
 #[derive(Serialize, Deserialize)]
-struct CacheEditInfos {
+struct GeocacheEditInfos {
     cache_name: Option<String>,
     difficulty: Option<i16>,
 }

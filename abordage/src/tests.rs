@@ -56,7 +56,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn check_caches_routes() {
+    async fn check_geocaches_routes() {
         let db = db().await;
         let shared_state = Arc::new(AppContext { db });
         let app = app(shared_state);
@@ -65,7 +65,7 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .method(http::Method::POST)
-                    .uri("/caches/new")
+                    .uri("/geocaches/new")
                     .body(Body::from(
                         serde_json::to_vec(&json!({"cache_name": "UltimateCacheTest", "maintainer": "John Doe", "location": {"type": "Point", "coordinates": [-1, -2]}, "difficulty": 1})).unwrap())).unwrap()).await.unwrap();
 

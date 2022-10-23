@@ -3,5 +3,5 @@ pub mod lib;
 use axum::Router;
 
 pub fn router() -> Router {
-    Router::new().nest("/caches", geocache::router())
+    Router::new().nest("/geocaches", geocache::router())
 }
