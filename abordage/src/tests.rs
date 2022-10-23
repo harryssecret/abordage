@@ -6,7 +6,54 @@ mod tests {
         http::{self, Request},
     };
     use serde_json::json;
-    use tower::{Service, ServiceExt};
+    use tower::ServiceExt;
+
+    #[tokio::test]
+    async fn check_users_routes() {
+        let db = db().await;
+        let shared_state = Arc::new(AppContext { db });
+        let app = app(shared_state);
+
+        let users_list = &app
+            .oneshot(
+                Request::builder()
+                    .method("GET")
+                    .uri("/users")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(users_list.status(), http::StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn check_auth_routes() {
+        let db = db().await;
+        let shared_state = Arc::new(AppContext { db });
+        let app = app(shared_state);
+
+        let add_user_req = app
+            .oneshot(
+                Request::builder()
+                    .method(http::Method::POST)
+                    .uri("/users")
+                    .header(http::header::CONTENT_TYPE, "application/json")
+                    .body(Body::from(
+                        serde_json::to_vec(&json!({
+                            "name": "John Doe",
+                            "password": "password",
+                        }))
+                        .expect("failed to serialize json"),
+                    ))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(add_user_req.status(), http::StatusCode::CREATED);
+    }
 
     #[tokio::test]
     async fn check_caches_routes() {
@@ -27,5 +74,7 @@ mod tests {
             )
             .await
             .unwrap();
+
+        assert_eq!(response.status(), http::StatusCode::CREATED);
     }
 }
