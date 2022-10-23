@@ -62,7 +62,7 @@ async fn get_user(Path(user_id): Path<i32>, Extension(ctx): Extension<Arc<AppCon
 #[derive(Serialize, Deserialize)]
 struct NewPirate {
     pub username: String,
-    password: String,
+    pub password: String,
 }
 
 struct Pirate {
