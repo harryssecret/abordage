@@ -5,7 +5,7 @@ use axum::{
     routing::{get, post},
     Extension, Json, Router,
 };
-use geo::Point;
+use geo_types::Point;
 use geozero::wkb;
 use serde::{Deserialize, Serialize};
 
@@ -119,7 +119,7 @@ impl Cache {
 struct NewCache {
     cache_name: String,
     maintainer: String,
-    location: Point,
+    location: geo_types::Point,
     difficulty: i16,
 }
 
