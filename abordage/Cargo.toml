@@ -3,25 +3,27 @@ name = "abordage"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 dotenvy = "0.15.0"
+
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
 geo = {version = "0.23.0", features = ["use-serde"]}
-geozero = {version = "0.9.5", features = ["with-wkb", "with-geos"]}
+geozero = {version = "0.9.5", features = ["with-wkb", "with-geos", "with-postgis-sqlx"]}
 geo-types = { version = "0.7" }
 geos = { version = "8.0", optional = true }
+geojson = { version = "*", features = ["geo-types"] }
+
+# axum needs tokio, tower and hyper as dependencies!
+tokio = { version = "1.21.2", features = ["full"] } 
+tower = "0.4.13"
+hyper = { version = "0.14.20", features = ["full"] }
+
+[dependencies.axum]
+version = "0.5.16"
+features = ["json", "form"]
 
 [dependencies.sqlx]
-version = "0.5.1"
-default-features = false
-features = ["macros", "migrate", "offline", "postgres", "json"]
-
-[dependencies.rocket]
-version = "0.5.0-rc.2"
-features = ["json"]
-
-[dependencies.rocket_db_pools]
-features = ["sqlx_postgres"]
+version = "0.6.2"
+features = ["macros", "migrate", "offline", "postgres", "json", "runtime-tokio-native-tls"]
