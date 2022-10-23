@@ -25,4 +25,4 @@ features = ["json", "form"]
 
 [dependencies.sqlx]
 version = "0.6.2"
-features = ["macros", "migrate", "offline", "postgres", "json", "runtime-tokio-native-tls"]
+features = ["macros", "migrate", "postgres", "json", "runtime-tokio-native-tls", "offline"]

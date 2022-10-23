@@ -1,3 +1,179 @@
 {
-  "db": "PostgreSQL"
+  "db": "PostgreSQL",
+  "142228f9d59786fa318ecaa1e7fbc1ecc70b3e8f5029486795af48f8b05a2e3e": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Int2",
+          "Int4"
+        ]
+      }
+    },
+    "query": "UPDATE caches SET cache_name = $1, difficulty = $2 WHERE id = $3"
+  },
+  "32b825b61c85fc1417909a0dac276e9fab2646bc9d74a6e4b014b76f121c7998": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "cache_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "location!: _",
+          "ordinal": 2,
+          "type_info": {
+            "Custom": {
+              "kind": "Simple",
+              "name": "geography"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT id, cache_name, cache_location as \"location!: _\" FROM caches WHERE id = $1"
+  },
+  "36f2be0c3b76ab39a54108bc2343d08ee506c9680fd53702a152ac0e0565fa0f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Varchar",
+          {
+            "Custom": {
+              "kind": "Simple",
+              "name": "geometry"
+            }
+          },
+          "Int2"
+        ]
+      }
+    },
+    "query": "INSERT INTO caches (cache_name, maintainer, cache_location, difficulty) VALUES ($1, $2, $3::geometry, $4)"
+  },
+  "50293c2e54af11d4c2a553e29b671cef087a159c6ee7182d8ca929ecb748f3b7": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "DELETE FROM users WHERE id = $1"
+  },
+  "6f5edd60ca6655861cb5673793c0a1427702a27803f58e7c48cf4f0fefccac6d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "username",
+          "ordinal": 0,
+          "type_info": "Varchar"
+        },
+        {
+          "name": "display_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "gamepoints",
+          "ordinal": 2,
+          "type_info": "Int4"
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int4"
+        ]
+      }
+    },
+    "query": "SELECT username, display_name, gamepoints FROM users WHERE id = $1;"
+  },
+  "86e402bc8ebd699e5666106cba8d5d8e47db247c8d128d7dd6a192550bdcedd7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Int4"
+        },
+        {
+          "name": "cache_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "location!: _",
+          "ordinal": 2,
+          "type_info": {
+            "Custom": {
+              "kind": "Simple",
+              "name": "geography"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "SELECT id, cache_name, cache_location as \"location!: _\" FROM caches"
+  },
+  "b73ed725d783e8d60e5acf0749329f01dc03fc71132700ea2dd563c82634714d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "INSERT INTO users (username, pirate_password) VALUES ($1, $2)"
+  },
+  "d5bef1557c5af85ca0e240676949aff966838ab81e1ce0702608e929e4675fcd": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Varchar"
+        ]
+      }
+    },
+    "query": "UPDATE users SET display_name = $1, pirate_password = $2"
+  }
 }
