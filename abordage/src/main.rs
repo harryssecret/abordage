@@ -40,8 +40,9 @@ pub async fn db() -> Pool<Postgres> {
 pub fn app(shared_state: Arc<AppContext>) -> Router {
     Router::new()
         .route("/", get(|| async { "abordage is running:)" }))
-        .layer(ServiceBuilder::new().layer(Extension(shared_state)))
         .merge(caches::router())
+        .merge(users::router())
+        .layer(ServiceBuilder::new().layer(Extension(shared_state)))
 }
 
 pub struct AppContext {
