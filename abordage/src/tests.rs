@@ -14,7 +14,7 @@ mod tests {
         let shared_state = Arc::new(AppContext { db });
         let app = app(shared_state);
 
-        let users_list = &app
+        let users_list = app
             .oneshot(
                 Request::builder()
                     .method("GET")
@@ -29,7 +29,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn check_auth_routes() {
+    async fn check_users_creation() {
         let db = db().await;
         let shared_state = Arc::new(AppContext { db });
         let app = app(shared_state);
@@ -38,11 +38,11 @@ mod tests {
             .oneshot(
                 Request::builder()
                     .method(http::Method::POST)
-                    .uri("/users")
+                    .uri("/users/new")
                     .header(http::header::CONTENT_TYPE, "application/json")
                     .body(Body::from(
                         serde_json::to_vec(&json!({
-                            "name": "John Doe",
+                            "username": "John Doe",
                             "password": "password",
                         }))
                         .expect("failed to serialize json"),
@@ -67,13 +67,7 @@ mod tests {
                     .method(http::Method::POST)
                     .uri("/caches/new")
                     .body(Body::from(
-                        serde_json::to_vec(&json!({"cache_name": "UltimateCacheTest"}))
-                            .expect("Impossible to serialize json"),
-                    ))
-                    .unwrap(),
-            )
-            .await
-            .unwrap();
+                        serde_json::to_vec(&json!({"cache_name": "UltimateCacheTest", "maintainer": "John Doe", "location": {"type": "Point", "coordinates": [-1, -2]}, "difficulty": 1})).unwrap())).unwrap()).await.unwrap();
 
         assert_eq!(response.status(), http::StatusCode::CREATED);
     }
