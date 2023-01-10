@@ -15,7 +15,7 @@ geo-types = { version = "0.7" }
 geojson = { version = "*", features = ["geo-types"] }
 
 # axum needs tokio, tower and hyper as dependencies!
-tokio = { version = "1.21.2", features = ["full"] } 
+tokio = { version = "1.23.1", features = ["full"] } 
 tower = "0.4.13"
 hyper = { version = "0.14.20", features = ["full"] }
 
